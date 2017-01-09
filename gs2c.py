@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # gs2 compiler (version 0.2)
 # (c) nooodl 2014
 
