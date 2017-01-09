@@ -252,9 +252,9 @@ is_num   = lambda v: isinstance(v, (int, long))
 is_list  = lambda v: isinstance(v, list)
 is_block = lambda v: isinstance(v, Block)
 
-def to_gs(ps): return map(ord, ps)
+def chr_to_int(ps): return map(ord, ps)
 
-def to_ps(gs):
+def int_to_chr(gs):
     if is_list(gs): return ''.join(map(chr, gs))
     else: return chr(gs)
     
@@ -288,12 +288,12 @@ class Stack(list):
 class GS2(object):
     def __init__(self, code, stdin=''):
         self.code = code
-        self.stdin = to_gs(stdin)
+        self.stdin = chr_to_int(stdin)
         self.stack = Stack([self.stdin])
         self.regs = {
-            0: to_gs(stdin),         # A
+            0: chr_to_int(stdin),         # A
             1: len(stdin),           # B
-            2: to_gs(code),          # C
+            2: chr_to_int(code),          # C
             3: random.randint(0, 2), # D
         }
         self.counter = 1
@@ -328,43 +328,43 @@ class GS2(object):
                 assert len(t) >= 2
                 assert t[-1] in STRING_ENDS
                 strings = t[1:-1].split('\x07')
-                strings = map(to_gs, strings)
+                strings = map(chr_to_int, strings)
                 if t[-1] == '\x05': # regular
                     self.stack += strings
                 elif t[-1] == '\x06': # array
                     self.stack.append(strings)
                 elif t[-1] == '\x9b': # printf
-                    f = to_ps(strings.pop())
+                    f = int_to_chr(strings.pop())
                     n = f.count('%') - f.count('%%') * 2
-                    x = tuple(map(to_ps, self.stack[-n:]))
+                    x = tuple(map(int_to_chr, self.stack[-n:]))
                     del self.stack[-n:]
-                    self.stack.append(to_gs(f % x))
+                    self.stack.append(chr_to_int(f % x))
                 elif t[-1] == '\x9c': # regex match
-                    pattern = to_ps(strings.pop())
+                    pattern = int_to_chr(strings.pop())
                     c, pattern = regex_count(pattern)
-                    s = to_ps(self.stack.pop())
+                    s = int_to_chr(self.stack.pop())
                     f = re.match if c else re.search
                     self.stack.append(1 if f(pattern, s) else 0)
                 elif t[-1] == '\x9d': # regex sub
-                    repl = to_ps(strings.pop())
-                    pattern = to_ps(strings.pop())
+                    repl = int_to_chr(strings.pop())
+                    pattern = int_to_chr(strings.pop())
                     c, pattern = regex_count(pattern)
-                    s = to_ps(self.stack.pop())
+                    s = int_to_chr(self.stack.pop())
                     m = re.sub(pattern, repl, s, count=c)
-                    self.stack.append(to_gs(m))
+                    self.stack.append(chr_to_int(m))
                 elif t[-1] == '\x9e': # regex find
-                    pattern = to_ps(strings.pop())
+                    pattern = int_to_chr(strings.pop())
                     c, pattern = regex_count(pattern)
-                    s = to_ps(self.stack.pop())
+                    s = int_to_chr(self.stack.pop())
                     ms = re.findall(pattern, s)
                     if c > 0: ms = ms[0] if ms else []
-                    self.stack.append(map(to_gs, ms))
+                    self.stack.append(map(chr_to_int, ms))
                 elif t[-1] == '\x9f': # regex split
-                    pattern = to_ps(strings.pop())
+                    pattern = int_to_chr(strings.pop())
                     c, pattern = regex_count(pattern)
-                    s = to_ps(self.stack.pop())
+                    s = int_to_chr(self.stack.pop())
                     m = re.split(pattern, s, maxsplit=c)
-                    self.stack.append(map(to_gs, m))
+                    self.stack.append(map(chr_to_int, m))
                 
             elif t[0] == '\x07': # single char string
                 self.stack.append([ord(t[1])])
@@ -500,7 +500,7 @@ class GS2(object):
                 elif is_list(x):
                     if x and x[-1] == ord('\n'):
                         x.pop()
-                    self.stack.append(split(x, to_gs('\n')))
+                    self.stack.append(split(x, chr_to_int('\n')))
                 else:
                     raise TypeError('double / line')
 
@@ -509,8 +509,8 @@ class GS2(object):
                 if is_num(x):
                     self.stack.append(x // 2)
                 elif is_list(x):
-                    x = [to_gs(show(i)) for i in x]
-                    self.stack.append(join(x, to_gs('\n')))
+                    x = [chr_to_int(show(i)) for i in x]
+                    self.stack.append(join(x, chr_to_int('\n')))
                 else:
                     raise TypeError('half / unlines')
 
@@ -519,7 +519,7 @@ class GS2(object):
                 if is_num(x):
                     self.stack.append(x * x)
                 elif is_list(x):
-                    self.stack.append(map(to_gs, to_ps(x).split()))
+                    self.stack.append(map(chr_to_int, int_to_chr(x).split()))
                 else:
                     raise TypeError('square / words')
 
@@ -528,8 +528,8 @@ class GS2(object):
                 if is_num(x):
                     self.stack.append(int(math.sqrt(x)))
                 elif is_list(x):
-                    x = [to_gs(show(i)) for i in x]
-                    self.stack.append(join(x, to_gs(' ')))
+                    x = [chr_to_int(show(i)) for i in x]
+                    self.stack.append(join(x, chr_to_int(' ')))
                 else:
                     raise TypeError('sqrt / unwords')
 
@@ -838,32 +838,32 @@ class GS2(object):
                 self.stack.pop()
             elif t == '\x52': #= show
                 x = self.stack.pop()
-                self.stack.append(to_gs(show(x)))
+                self.stack.append(chr_to_int(show(x)))
             elif t == '\x53': #= map-show
                 x = self.stack.pop()
-                self.stack.append(map(to_gs, map(show, x)))
+                self.stack.append(map(chr_to_int, map(show, x)))
             elif t == '\x54': #= show-lines
                 x = self.stack.pop()
-                self.stack.append(to_gs('\n'.join(map(show, x))))
+                self.stack.append(chr_to_int('\n'.join(map(show, x))))
             elif t == '\x55': #= show-words
                 x = self.stack.pop()
-                self.stack.append(to_gs(' '.join(map(show, x))))
+                self.stack.append(chr_to_int(' '.join(map(show, x))))
             elif t in '\x56\x57': #= read-num, read-nums
-                x = to_ps(self.stack.pop())
+                x = int_to_chr(self.stack.pop())
                 nums = map(int, re.findall(r'-?\d+', x))
                 self.stack.append(nums[0] if t == '\x56' else nums)
             elif t == '\x58': #= show-line
                 x = self.stack.pop()
-                self.stack.append(to_gs(show(x) + '\n'))
+                self.stack.append(chr_to_int(show(x) + '\n'))
             elif t == '\x59': #= show-space
                 x = self.stack.pop()
-                self.stack.append(to_gs(show(x) + ' '))
+                self.stack.append(chr_to_int(show(x) + ' '))
             elif t == '\x5a': #= show-comma
                 x = self.stack.pop()
-                self.stack.append(to_gs(', '.join(map(show, x))))
+                self.stack.append(chr_to_int(', '.join(map(show, x))))
             elif t == '\x5b': #= show-python
                 x = self.stack.pop()
-                self.stack.append(to_gs(', '.join(map(show, x)).join('[]')))
+                self.stack.append(chr_to_int(', '.join(map(show, x)).join('[]')))
             elif t in '\x5c\x5d\x5e': #= ljust, center, rjust
                 fill = ' ' 
                 if is_num(self.stack[-2]):
@@ -873,9 +873,9 @@ class GS2(object):
                 if t == '\x5c': g = show(s).ljust(width, fill)
                 if t == '\x5d': g = show(s).center(width, fill)
                 if t == '\x5e': g = show(s).rjust(width, fill)
-                self.stack.append(to_gs(g))
+                self.stack.append(chr_to_int(g))
             elif t == '\x5f': #= inspect
-                self.stack.append(to_gs(repr(self.stack.pop())))
+                self.stack.append(chr_to_int(repr(self.stack.pop())))
             elif t == '\x60': #= logical-and
                 y = self.stack.pop()
                 x = self.stack.pop()
@@ -922,7 +922,7 @@ class GS2(object):
                     s = ("Fizz" if i % 3 == 0 else "") + \
                         ("Buzz" if i % 5 == 0 else "")
                     fizzbuzz.append(s or str(i))
-                self.stack.append(to_gs('\n'.join(fizzbuzz)))
+                self.stack.append(chr_to_int('\n'.join(fizzbuzz)))
             elif t == '\x67': #= popcnt right-cons
                 x = self.stack.pop()
                 if is_num(x):
@@ -945,7 +945,7 @@ class GS2(object):
                 s3 = ['!', '', '.', '...'][((x & 4) >> 2) | ((x & 16) >> 3)]
                 s4 = '' if x & 8 else ','
                 f = '%sello%s %sorld%s' % (s1, s4, s2, s3)
-                self.stack.append(to_gs(f))
+                self.stack.append(chr_to_int(f))
             elif t in '\x69\x6a': #= base, binary
                 b = 2 if t == '\x6a' else self.stack.pop()
                 x = self.stack.pop()
@@ -1095,7 +1095,7 @@ class GS2(object):
                      lambda x: all(32 <= ord(c) <= 126 for c in x),
                      lambda x: x in '0123456789abcdefABCDEF']
                 p = m[ord(t) - 0x88]
-                x = to_ps(self.stack.pop())
+                x = int_to_chr(self.stack.pop())
                 self.stack.append(1 if p(x) else 0)
             elif t == '\x90': #= uniq nub
                 xs = self.stack.pop()
@@ -1194,7 +1194,7 @@ class GS2(object):
             elif '\xd8' <= t <= '\xdb': # tuck
                 self.stack.insert(-1, self.regs[ord(t) & 3])
             elif '\xdc' <= t <= '\xdf': # show
-                self.stack.append(to_gs(show(self.regs[ord(t) & 3])))
+                self.stack.append(chr_to_int(show(self.regs[ord(t) & 3])))
             else:
                 raise ValueError('invalid token %r' % t) 
 
