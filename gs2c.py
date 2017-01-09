@@ -69,7 +69,7 @@ def compile_num(i):
         raise Exception("couldn't compile number: %s" % i)
 
 def compile_gs2(s):
-    s = '\n'.join(l for l in s.split('\n') if l and l[0] != '#')
+    s = '\n'.join(l for l in s.split('\n') if l.lstrip() and l.lstrip()[0] != '#')
     tokens = re.findall(r'"[^"]*"|\S+', s)
     string_mode = False
     string_array = False
