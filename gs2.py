@@ -23,10 +23,10 @@ STRING_ENDS = '\x05\x06' + ''.join(map(chr, range(0x9b, 0xa0)))
 
 DEBUG = False
 
-def log(x):
+def log(section, x):
     if not DEBUG: return
     line, name = inspect.stack()[1][2:4]
-    sys.stderr.write('\x1b[36m%s:%d\x1b[34m: %r\x1b[0m\n' % (name, line, x))
+    sys.stderr.write('\x1b[36m%s:%d\x1b[34m: %s: %s\x1b[0m\n' % (name, line, section, x))
 
 def lcm(a, b):
     if (a, b) == (0, 0): return 0
@@ -160,6 +160,9 @@ def chunks(x, y):
         yield x[:y]
         x = x[y:]
 
+def hexstring(s):
+    return " ".join('$%02x' % ord(c) for c in s)
+
 def tokenize(prog):
     # string hack
     cs = STRING_ENDS
@@ -187,7 +190,7 @@ def tokenize(prog):
     i = 0 
     while i < len(tokens):
         t = tokens[i]
-        log(tokens[i:])
+        log("token", "%-20s %-20r %-20d" % (hexstring(t), t, int(t.encode("hex"), 16)))
         if t == '\x08': #= {
             blocks.append(Block([]))
             final.append('\x00')
@@ -308,7 +311,7 @@ class GS2(object):
             if not DEBUG: sys.stdout.write(self.code)
 
     def evaluate(self, block):
-        log(block)
+        log("eval", block)
         for t in block.code:
             if is_block(t):
                 self.stack.append(t)
