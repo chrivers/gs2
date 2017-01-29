@@ -272,7 +272,10 @@ def show(value, nest=False):
     if is_list(value):
         return ''.join(show(x, nest=True) for x in value)
     elif nest and is_num(value):
-        return chr(value)
+        try:
+            return chr(value)
+        except ValueError:
+            raise ValueError("Number %d is non-ascii" % value)
     else:
         return str(value)
 
