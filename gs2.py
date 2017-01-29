@@ -170,7 +170,7 @@ def tokenize(prog):
         prog = '\x04' + prog
     
     mode = None
-    if prog[0] in '\x30\x31\x32': # set mode
+    if prog and prog[0] in '\x30\x31\x32': # set mode
         mode = prog[0]
         prog = prog[1:]
     
