@@ -287,6 +287,12 @@ class Stack(list):
         x = list.pop(self, i)
         if junk: self.junk.append(x)
         return x
+    def dump(self, fd):
+        for idx, level in enumerate(reversed(self)):
+            fd.write("%6d %r\n" % (-idx-1, level))
+        for idx, level in list(enumerate(reversed(self.junk)))[:15]:
+            fd.write("@%6d %r\n" % (idx, level))
+
 
 class GS2(object):
     def __init__(self, code, stdin=''):
@@ -300,6 +306,15 @@ class GS2(object):
             3: random.randint(0, 2), # D
         }
         self.counter = 1
+
+    def dump(self, fd):
+        fd.write("stack dump:\n")
+        self.stack.dump(fd)
+        fd.write("register map:\n")
+        fd.write("  A: %r" % self.regs[0])
+        fd.write("  B: %r" % self.regs[1])
+        fd.write("  C: %r" % self.regs[2])
+        fd.write("  D: %r\n" % self.regs[3])
 
     def run(self):
         try:
