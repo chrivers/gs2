@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # gs2 interpreter (version 0.2)
 # (c) nooodl 2014
 
