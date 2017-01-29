@@ -161,7 +161,14 @@ def chunks(x, y):
         x = x[y:]
 
 def hexstring(s):
-    return " ".join('$%02x' % ord(c) for c in s)
+    if is_block(s):
+        return "{ %s }" % hexstring(s.code)
+    elif is_list(s):
+        return " ".join(hexstring(c) for c in s)
+    elif isinstance(s, str):
+        return '[%r]' % s
+    else:
+        return '$%02x' % ord(s)
 
 def tokenize(prog):
     # string hack
